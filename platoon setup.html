@@ -16,8 +16,13 @@
       max-width: 200px;
     }
 
+    .grids-wrapper {
+      display: flex;
+      gap: 40px;
+      flex-wrap: nowrap;
+    }
+
     .grid-wrapper {
-      flex-grow: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -65,34 +70,26 @@
 
   <div class="input-section">
     <h2>Platoon Setup</h2>
-    <label for="circleInput">Enter a number (1–40):</label><br />
+    <label for="circleInput">How many in the Platoon? (1–40):</label><br />
     <input type="number" id="circleInput" min="1" max="40" /><br /><br />
+
+    <label for="numGrids">How many Platoons? (1–3):</label><br />
+    <input type="number" id="numGrids" min="1" max="3" value="1" /><br /><br />
+
     <label>
       <input type="checkbox" id="commanderCheck" />
       Is there a commander?
     </label><br /><br />
-    <button onclick="generateGrid()">Generate</button>
+
+    <button onclick="generateGrids()">Generate</button>
   </div>
 
-  <div class="grid-wrapper">
-    <div id="commanderCircle"></div>
-    <div id="circleGrid" class="grid"></div>
+  <div class="grids-wrapper" id="gridsWrapper">
+    <!-- Multiple grids will be inserted here -->
   </div>
 
   <script>
-    function generateGrid() {
-      const input = parseInt(document.getElementById('circleInput').value);
-      const grid = document.getElementById('circleGrid');
-      const commanderDiv = document.getElementById('commanderCircle');
-      const hasCommander = document.getElementById('commanderCheck').checked;
-      grid.innerHTML = '';
-      commanderDiv.innerHTML = '';
-
-      if (isNaN(input) || input < 1 || input > 40) {
-        alert('Please enter a valid number between 1 and 40.');
-        return;
-      }
-
+    function generateGrid(input, hasCommander) {
       let rows, cols;
       if (input <= 5) {
         rows = 1;
@@ -105,21 +102,35 @@
         cols = Math.ceil(input / 3);
       }
 
+      // Create wrapper for one grid + commander
+      const gridWrapper = document.createElement('div');
+      gridWrapper.classList.add('grid-wrapper');
+
+      // Commander circle container
+      const commanderDiv = document.createElement('div');
+      if (hasCommander) {
+        const commanderCircle = document.createElement('div');
+        commanderCircle.classList.add('commander');
+        commanderCircle.textContent = 'C';
+        commanderDiv.appendChild(commanderCircle);
+      }
+      gridWrapper.appendChild(commanderDiv);
+
+      // Grid container
+      const grid = document.createElement('div');
+      grid.classList.add('grid');
       grid.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
 
       const totalCells = rows * cols;
       const cells = Array(totalCells).fill(null);
       const remainder = input % 3;
 
-      // Adjusted placeholder indexing for right-to-left rendering
       function adjustedIndex(row, col, cols) {
         return row * cols + (cols - 1 - col);
       }
 
-      // Clear previous placeholders first
       cells.fill(null);
 
-      // Place placeholders only if conditions match and not for 9
       if ((remainder === 1 && input > 5 && input < 11) || input === 9) {
         if (input === 10) {
           // no placeholder for 10 here
@@ -131,15 +142,6 @@
         cells[adjustedIndex(2, 1, cols)] = 'placeholder';
       } else if (remainder === 2 && input > 10) {
         cells[adjustedIndex(1, 1, cols)] = 'placeholder';
-      }
-      // no placeholders for remainder=0 (like 9)
-
-      // If commander checked, add the gold "C" circle above the grid
-      if (hasCommander) {
-        const commanderCircle = document.createElement('div');
-        commanderCircle.classList.add('commander');
-        commanderCircle.textContent = 'C';
-        commanderDiv.appendChild(commanderCircle);
       }
 
       let count = 1;
@@ -161,6 +163,32 @@
             grid.appendChild(blank);
           }
         }
+      }
+
+      gridWrapper.appendChild(grid);
+      return gridWrapper;
+    }
+
+    function generateGrids() {
+      const input = parseInt(document.getElementById('circleInput').value);
+      const numGrids = parseInt(document.getElementById('numGrids').value);
+      const hasCommander = document.getElementById('commanderCheck').checked;
+      const gridsWrapper = document.getElementById('gridsWrapper');
+
+      gridsWrapper.innerHTML = '';
+
+      if (isNaN(input) || input < 1 || input > 40) {
+        alert('Please enter a valid number between 1 and 40.');
+        return;
+      }
+      if (isNaN(numGrids) || numGrids < 1 || numGrids > 3) {
+        alert('Please enter a valid number of grids between 1 and 3.');
+        return;
+      }
+
+      for (let i = 0; i < numGrids; i++) {
+        const gridEl = generateGrid(input, hasCommander);
+        gridsWrapper.appendChild(gridEl);
       }
     }
   </script>
