@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Platoon Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+    }
+
+    .input-section {
+      max-width: 200px;
+    }
+
+    .grid-wrapper {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 5px;
+    }
+
+    .circle {
+      width: 30px;
+      height: 30px;
+      background-color: blue;
+      border-radius: 50%;
+      color: white;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .commander {
+      width: 30px;
+      height: 30px;
+      background-color: gold;
+      border-radius: 50%;
+      color: black;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .placeholder {
+      width: 32px;
+      height: 32px;
+      background-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="input-section">
+    <h2>Platoon Setup</h2>
+    <label for="circleInput">Enter a number (1–40):</label><br />
+    <input type="number" id="circleInput" min="1" max="40" /><br /><br />
+    <label>
+      <input type="checkbox" id="commanderCheck" />
+      Is there a commander?
+    </label><br /><br />
+    <button onclick="generateGrid()">Generate</button>
+  </div>
+
+  <div class="grid-wrapper">
+    <div id="commanderCircle"></div>
+    <div id="circleGrid" class="grid"></div>
+  </div>
+
+  <script>
+    function generateGrid() {
+      const input = parseInt(document.getElementById('circleInput').value);
+      const grid = document.getElementById('circleGrid');
+      const commanderDiv = document.getElementById('commanderCircle');
+      const hasCommander = document.getElementById('commanderCheck').checked;
+      grid.innerHTML = '';
+      commanderDiv.innerHTML = '';
+
+      if (isNaN(input) || input < 1 || input > 40) {
+        alert('Please enter a valid number between 1 and 40.');
+        return;
+      }
+
+      let rows, cols;
+      if (input <= 5) {
+        rows = 1;
+        cols = 5;
+      } else if (input <= 10) {
+        rows = 2;
+        cols = Math.ceil(input / 2);
+      } else {
+        rows = 3;
+        cols = Math.ceil(input / 3);
+      }
+
+      grid.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
+
+      const totalCells = rows * cols;
+      const cells = Array(totalCells).fill(null);
+      const remainder = input % 3;
+
+      // Adjusted placeholder indexing for right-to-left rendering
+      function adjustedIndex(row, col, cols) {
+        return row * cols + (cols - 1 - col);
+      }
+
+      // Clear previous placeholders first
+      cells.fill(null);
+
+      // Place placeholders only if conditions match and not for 9
+      if ((remainder === 1 && input > 5 && input < 11) || input === 9) {
+        if (input === 10) {
+          // no placeholder for 10 here
+        } else { 
+          cells[adjustedIndex(1, 1, cols)] = 'placeholder'; 
+        }
+      } else if (remainder === 1 && input > 10) {
+        cells[adjustedIndex(1, 1, cols)] = 'placeholder';
+        cells[adjustedIndex(2, 1, cols)] = 'placeholder';
+      } else if (remainder === 2 && input > 10) {
+        cells[adjustedIndex(1, 1, cols)] = 'placeholder';
+      }
+      // no placeholders for remainder=0 (like 9)
+
+      // If commander checked, add the gold "C" circle above the grid
+      if (hasCommander) {
+        const commanderCircle = document.createElement('div');
+        commanderCircle.classList.add('commander');
+        commanderCircle.textContent = 'C';
+        commanderDiv.appendChild(commanderCircle);
+      }
+
+      let count = 1;
+      for (let r = 0; r < rows; r++) {
+        for (let c = cols - 1; c >= 0; c--) {
+          const idx = r * cols + c;
+          if (cells[idx] === 'placeholder') {
+            const blank = document.createElement('div');
+            blank.classList.add('placeholder');
+            grid.appendChild(blank);
+          } else if (count <= input) {
+            const circle = document.createElement('div');
+            circle.classList.add('circle');
+            circle.textContent = count++;
+            grid.appendChild(circle);
+          } else {
+            const blank = document.createElement('div');
+            blank.classList.add('placeholder');
+            grid.appendChild(blank);
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
