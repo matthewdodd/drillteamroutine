@@ -35,7 +35,7 @@
       flex-grow: 1;
     }
 
-    .pc-leader {
+    .bc-leader {
       width: 40px;
       height: 40px;
       background-color: silver;
@@ -149,37 +149,37 @@
 
     <label>
       <input type="checkbox" id="commanderCheck" />
-      Is there a commander?
+      Is/Are there (a) Platoon Commander(s)?
     </label><br /><br />
 
     <label>
       <input type="checkbox" id="flagPartyCheck" />
-      Flag/Colour Party?
+      Is there a Flag/Colour Party?
     </label><br /><br />
 
     <button onclick="generateGrids()">Generate</button>
 
     <div class="legend">
       <div class="legend-item">
-        <div class="legend-circle legend-commander">C</div>
+        <div class="legend-circle legend-commander">PC</div>
         <span>= Platoon Commander</span>
       </div>
       <div class="legend-item">
-        <div class="legend-circle legend-pc">PC</div>
-        <span>= Parade Commander</span>
+        <div class="legend-circle legend-pc">BC</div>
+        <span>= Battalion Commander</span>
       </div>
     </div>
   </div>
 
   <div class="main-content" id="mainContent">
-    <div id="pcLeaderContainer"></div>
+    <div id="bcLeaderContainer"></div>
     <div class="grids-wrapper" id="gridsWrapper"></div>
   </div>
 
   <script>
     const platoonSizesContainer = document.getElementById('platoonSizesContainer');
     const numGridsInput = document.getElementById('numGrids');
-    const pcLeaderContainer = document.getElementById('pcLeaderContainer');
+    const bcLeaderContainer = document.getElementById('bcLeaderContainer');
 
     function updatePlatoonSizeInputs() {
       const numGrids = parseInt(numGridsInput.value) || 1;
@@ -279,7 +279,7 @@
       if (hasCommander) {
         const commanderCircle = document.createElement('div');
         commanderCircle.classList.add('commander');
-        commanderCircle.textContent = 'C';
+        commanderCircle.textContent = 'PC';
         commanderDiv.appendChild(commanderCircle);
       }
       gridWrapper.appendChild(commanderDiv);
@@ -339,14 +339,14 @@
       const gridsWrapper = document.getElementById('gridsWrapper');
 
       gridsWrapper.innerHTML = '';
-      pcLeaderContainer.innerHTML = '';
+      bcLeaderContainer.innerHTML = '';
 
       // Add PC if more than one grid
       if (numGrids > 1 || hasFlagParty) {
-        const pcCircle = document.createElement('div');
-        pcCircle.classList.add('pc-leader');
-        pcCircle.textContent = 'PC';
-        pcLeaderContainer.appendChild(pcCircle);
+        const bcCircle = document.createElement('div');
+        bcCircle.classList.add('bc-leader');
+        bcCircle.textContent = 'BC';
+        bcLeaderContainer.appendChild(bcCircle);
       }
 
       if (numGrids === 2 && hasFlagParty) {
