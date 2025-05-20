@@ -38,7 +38,7 @@
     .bc-leader {
       width: 40px;
       height: 40px;
-      background-color: silver;
+      background-color: gold;
       border-radius: 50%;
       color: black;
       font-weight: bold;
@@ -84,7 +84,7 @@
     .commander {
       width: 30px;
       height: 30px;
-      background-color: gold;
+      background-color: silver;
       border-radius: 50%;
       color: black;
       font-weight: bold;
@@ -127,12 +127,12 @@
     }
 
     .legend-commander {
-      background-color: gold;
+      background-color: silver;
       color: black;
     }
 
     .legend-pc {
-      background-color: silver;
+      background-color: gold;
       color: black;
     }
   </style>
@@ -237,6 +237,11 @@
         const circle = document.createElement('div');
         circle.classList.add('circle');
         circle.textContent = i + 1;
+        if (i ===2) {
+          circle.style.backgroundColor = 'red'; // Change color for the last circle
+          circle.textContent = 'FPC'; // Change text for the last circle
+          circle.style.fontWeight = 'bold'; // Make it bold
+        }
         grid.appendChild(circle);
       }
     
