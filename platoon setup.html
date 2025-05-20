@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Platoon Setup</title>
   <style>
+    /* [Styling remains the same as before] */
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
@@ -59,7 +60,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 0px;
     }
 
     .grid {
@@ -219,6 +220,45 @@
       updatePlatoonSizeInputs();
     });
 
+    function generateFlagPartyGrid() {
+      const wrapper = document.createElement('div');
+      const hasCommander = document.getElementById('commanderCheck').checked;
+      wrapper.classList.add('grid-wrapper');
+      if ( hasCommander ) {
+        wrapper.style.marginTop = '30px'; // Shift it down by one circle height
+      }
+
+      const grid = document.createElement('div');
+      grid.classList.add('grid');
+      grid.style.gridTemplateColumns = 'repeat(3, 32px)';
+
+      // First row: 3 circles
+      for (let i = 0; i < 3; i++) {
+        const circle = document.createElement('div');
+        circle.classList.add('circle');
+        circle.textContent = i + 1;
+        grid.appendChild(circle);
+      }
+    
+      // Second row: 2 circles at col 0 and 2, placeholder at col 1
+      const secondRow = [true, false, true];
+      for (let i = 0; i < 3; i++) {
+        if (secondRow[i]) {
+          const circle = document.createElement('div');
+          circle.classList.add('circle');
+          circle.textContent = i + 4;
+          grid.appendChild(circle);
+        } else {
+          const placeholder = document.createElement('div');
+          placeholder.classList.add('placeholder');
+          grid.appendChild(placeholder);
+        }
+      }
+    
+      wrapper.appendChild(grid);
+      return wrapper;
+    }
+
     function generateGrid(input, hasCommander) {
       let rows, cols;
       if (input <= 5) {
@@ -301,30 +341,96 @@
       gridsWrapper.innerHTML = '';
       pcLeaderContainer.innerHTML = '';
 
-      if (numGrids > 1) {
+      // Add PC if more than one grid
+      if (numGrids > 1 || hasFlagParty) {
         const pcCircle = document.createElement('div');
         pcCircle.classList.add('pc-leader');
         pcCircle.textContent = 'PC';
         pcLeaderContainer.appendChild(pcCircle);
       }
 
-      for (let i = 0; i < numGrids; i++) {
-        const platoonSizeInput = document.getElementById(`platoonSize${i}`);
-        const input = parseInt(platoonSizeInput.value);
-
-        if (isNaN(input) || input < 1 || input > 40) {
-          alert(`Please enter a valid number between 1 and 40 for Platoon ${i + 1}.`);
+      if (numGrids === 2 && hasFlagParty) {
+        // Generate Platoon 1
+        const platoonSizeInput1 = document.getElementById(`platoonSize0`);
+        const input1 = parseInt(platoonSizeInput1.value);
+        if (isNaN(input1) || input1 < 1 || input1 > 40) {
+          alert(`Please enter a valid number between 1 and 40 for Platoon 1.`);
           return;
         }
+        const grid1 = generateGrid(input1, hasCommander);
+        gridsWrapper.appendChild(grid1);
+      
+        // Generate Flag Party
+        const flagParty = generateFlagPartyGrid();
+        gridsWrapper.appendChild(flagParty);
+      
+        // Generate Platoon 2
+        const platoonSizeInput2 = document.getElementById(`platoonSize1`);
+        const input2 = parseInt(platoonSizeInput2.value);
+        if (isNaN(input2) || input2 < 1 || input2 > 40) {
+          alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
+          return;
+        }
+        const grid2 = generateGrid(input2, hasCommander);
+        gridsWrapper.appendChild(grid2);
+      
+      } else if (numGrids === 3 && hasFlagParty) {
+        // Generate Platoon 1
+        const platoonSizeInput1 = document.getElementById(`platoonSize0`);
+        const input1 = parseInt(platoonSizeInput1.value);
+        if (isNaN(input1) || input1 < 1 || input1 > 40) {
+          alert(`Please enter a valid number between 1 and 40 for Platoon 1.`);
+          return;
+        }
+        const grid1 = generateGrid(input1, hasCommander);
+        gridsWrapper.appendChild(grid1);
+      
+        // Generate Platoon 2
+        const platoonSizeInput2 = document.getElementById(`platoonSize1`);
+        const input2 = parseInt(platoonSizeInput2.value);
+        if (isNaN(input2) || input2 < 1 || input2 > 40) {
+          alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
+          return;
+        }
+        const grid2 = generateGrid(input2, hasCommander);
+        gridsWrapper.appendChild(grid2);
 
-        const gridEl = generateGrid(input, hasCommander);
-        gridsWrapper.appendChild(gridEl);
-      }
+        // Generate Flag Party
+        const flagParty = generateFlagPartyGrid();
+        gridsWrapper.appendChild(flagParty);
 
-      if (hasFlagParty) {
-        alert('Flag/Colour Party option selected (placeholder for future behavior).');
+        // Generate Platoon 2
+        const platoonSizeInput3 = document.getElementById(`platoonSize1`);
+        const input3 = parseInt(platoonSizeInput2.value);
+        if (isNaN(input3) || input3 < 1 || input3 > 40) {
+          alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
+          return;
+        }
+        const grid3 = generateGrid(input3, hasCommander);
+        gridsWrapper.appendChild(grid3);
+      } else {
+        // Regular behavior for 1 or 3 platoons (or 2 without flag)
+        for (let i = 0; i < numGrids; i++) {
+          const platoonSizeInput = document.getElementById(`platoonSize${i}`);
+          const input = parseInt(platoonSizeInput.value);
+        
+          if (isNaN(input) || input < 1 || input > 40) {
+            alert(`Please enter a valid number between 1 and 40 for Platoon ${i + 1}.`);
+            return;
+          }
+        
+          const gridEl = generateGrid(input, hasCommander);
+          gridsWrapper.appendChild(gridEl);
+        
+          // Insert flag party only if one platoon + flag party
+          if (numGrids === 1 && hasFlagParty) {
+            const flagParty = generateFlagPartyGrid();
+            gridsWrapper.appendChild(flagParty);
+          }
+        }
       }
     }
+
   </script>
 </body>
 </html>
