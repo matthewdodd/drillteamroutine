@@ -93,6 +93,22 @@
       align-items: center;
       justify-content: center;
       user-select: none;
+      margin-bottom: 10px;
+    }
+
+    .commander2 {
+      width: 30px;
+      height: 30px;
+      background-color: silver;
+      border-radius: 50%;
+      color: black;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      margin-top: 10px;
     }
 
     .placeholder {
@@ -135,6 +151,11 @@
       background-color: gold;
       color: black;
     }
+
+    .legend-p2 {
+      background-color: lightgrey;
+      color: black;
+    }
   </style>
 </head>
 <body>
@@ -156,11 +177,6 @@
     <div class="platoon-sizes" id="platoonSizesContainer"></div>
 
     <label>
-      <input type="checkbox" id="commanderCheck" />
-      Is/Are there (a) Platoon Commander(s)?
-    </label><br /><br />
-
-    <label>
       <input type="checkbox" id="flagPartyCheck" />
       Is there a Flag/Colour Party?
     </label><br /><br />
@@ -169,12 +185,16 @@
 
     <div class="legend">
       <div class="legend-item">
+        <div class="legend-circle legend-pc">BC</div>
+        <span>= Battalion Commander</span>
+      </div>
+      <div class="legend-item">
         <div class="legend-circle legend-commander">PC</div>
         <span>= Platoon Commander</span>
       </div>
       <div class="legend-item">
-        <div class="legend-circle legend-pc">BC</div>
-        <span>= Battalion Commander</span>
+        <div class="legend-circle legend-p2">P2</div>
+        <span>= Platoon 2IC</span>
       </div>
     </div>
   </div>
@@ -206,7 +226,7 @@
         input.id = `platoonSize${i}`;
         input.min = 1;
         input.max = 40;
-        input.value = 10;
+        input.value = 39;
 
         div.appendChild(label);
         div.appendChild(document.createElement('br'));
@@ -237,7 +257,7 @@
       }
     }
 
-    function generateGrid(input, hasCommander, forceType) {
+    function generateGrid(input, forceType) {
       let rows, cols;
       if (input <= 5) {
         rows = 1;
@@ -254,12 +274,10 @@
       gridWrapper.classList.add('grid-wrapper');
     
       const commanderDiv = document.createElement('div');
-      if (hasCommander) {
-        const commanderCircle = document.createElement('div');
-        commanderCircle.classList.add('commander');
-        commanderCircle.textContent = 'PC';
-        commanderDiv.appendChild(commanderCircle);
-      }
+      const commanderCircle = document.createElement('div');
+      commanderCircle.classList.add('commander');
+      commanderCircle.textContent = 'PC';
+      commanderDiv.appendChild(commanderCircle);
       gridWrapper.appendChild(commanderDiv);
     
       const grid = document.createElement('div');
@@ -308,16 +326,21 @@
       }
     
       gridWrapper.appendChild(grid);
+
+      const commanderDiv2 = document.createElement('div');
+      const commanderCircle2 = document.createElement('div');
+      commanderCircle2.classList.add('commander2');
+      commanderCircle2.textContent = 'P2';
+      commanderDiv2.appendChild(commanderCircle2);
+      gridWrapper.appendChild(commanderDiv2);
+
       return gridWrapper;
     }
 
     function generateFlagPartyGrid(forceType) {
       const wrapper = document.createElement('div');
-      const hasCommander = document.getElementById('commanderCheck').checked;
       wrapper.classList.add('grid-wrapper');
-      if (hasCommander) {
-        wrapper.style.marginTop = '30px';
-      }
+      wrapper.style.marginTop = '40px';
     
       const grid = document.createElement('div');
       grid.classList.add('grid');
@@ -357,7 +380,6 @@
 
     function generateGrids() {
       const numGrids = parseInt(numGridsInput.value);
-      const hasCommander = document.getElementById('commanderCheck').checked;
       const hasFlagParty = document.getElementById('flagPartyCheck').checked;
       const gridsWrapper = document.getElementById('gridsWrapper');
       const forceType = document.getElementById('forceType').value;
@@ -381,7 +403,7 @@
           alert(`Please enter a valid number between 1 and 40 for Platoon 1.`);
           return;
         }
-        const grid1 = generateGrid(input1, hasCommander, forceType);
+        const grid1 = generateGrid(input1, forceType);
         gridsWrapper.appendChild(grid1);
       
         // Generate Flag Party
@@ -395,7 +417,7 @@
           alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
           return;
         }
-        const grid2 = generateGrid(input2, hasCommander, forceType);
+        const grid2 = generateGrid(input2, forceType);
         gridsWrapper.appendChild(grid2);
       
       } else if (numGrids === 3 && hasFlagParty) {
@@ -406,7 +428,7 @@
           alert(`Please enter a valid number between 1 and 40 for Platoon 1.`);
           return;
         }
-        const grid1 = generateGrid(input1, hasCommander, forceType);
+        const grid1 = generateGrid(input1, forceType);
         gridsWrapper.appendChild(grid1);
       
         // Generate Platoon 2
@@ -416,7 +438,7 @@
           alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
           return;
         }
-        const grid2 = generateGrid(input2, hasCommander, forceType);
+        const grid2 = generateGrid(input2, forceType);
         gridsWrapper.appendChild(grid2);
 
         // Generate Flag Party
@@ -430,7 +452,7 @@
           alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
           return;
         }
-        const grid3 = generateGrid(input3, hasCommander, forceType);
+        const grid3 = generateGrid(input3, forceType);
         gridsWrapper.appendChild(grid3);
       } else {
         // Regular behavior for 1 or 3 platoons (or 2 without flag)
@@ -443,7 +465,7 @@
             return;
           }
         
-          const gridEl = generateGrid(input, hasCommander, forceType);
+          const gridEl = generateGrid(input, forceType);
           gridsWrapper.appendChild(gridEl);
         
           // Insert flag party only if one platoon + flag party
