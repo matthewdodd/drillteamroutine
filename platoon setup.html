@@ -305,8 +305,8 @@
       }
     }
 
-    function getCircleLetterBM(forceType) {
-      switch (forceType) {
+    function getCircleLetterBM(bandType) {
+      switch (bandType) {
         case 'Drum Band': return 'DM';
         case 'Pipe Band': return 'PM';
         default: return 'BM';
@@ -479,7 +479,8 @@
       const gridsWrapper = document.getElementById('gridsWrapper');
       const forceType = document.getElementById('forceType').value;
 
-      updateLegendLabels(forceType);
+      updateLegendLabels1(forceType);
+      updateLegendLabels2(bandType);
 
       gridsWrapper.innerHTML = '';
       bcLeaderContainer.innerHTML = '';
