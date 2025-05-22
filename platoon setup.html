@@ -132,8 +132,8 @@
     }
 
     .legend-circle {
-      width: 20px;
-      height: 20px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -185,15 +185,15 @@
 
     <div class="legend">
       <div class="legend-item">
-        <div class="legend-circle legend-pc">BC</div>
+        <div class="legend-circle legend-pc" id="legendBCCircle">BC</div>
         <span>= Battalion Commander</span>
       </div>
       <div class="legend-item">
-        <div class="legend-circle legend-commander">PC</div>
+        <div class="legend-circle legend-commander" id="legendCommanderCircle">PC</div>
         <span>= Platoon Commander</span>
       </div>
       <div class="legend-item">
-        <div class="legend-circle legend-p2">P2</div>
+        <div class="legend-circle legend-p2" id="legend2icCircle">P2</div>
         <span>= Platoon 2IC</span>
       </div>
     </div>
@@ -257,6 +257,33 @@
       }
     }
 
+    function getCircleLetterBC(forceType) {
+      switch (forceType) {
+        case 'Air': return 'SCWO';
+        case 'Army': return 'CWO';
+        case 'Sea': return 'CPO1';
+        default: return 'BC';
+      }
+    }
+
+    function getCircleLetterPC(forceType) {
+      switch (forceType) {
+        case 'Air': return 'FSgt';
+        case 'Army': return 'WO';
+        case 'Sea': return 'PO1';
+        default: return 'PC';
+      }
+    }
+
+    function getCircleLetterP2(forceType) {
+      switch (forceType) {
+        case 'Air': return 'Sgt';
+        case 'Army': return 'Sgt';
+        case 'Sea': return 'PO2';
+        default: return 'P2';
+      }
+    }
+
     function generateGrid(input, forceType) {
       let rows, cols;
       if (input <= 5) {
@@ -276,7 +303,7 @@
       const commanderDiv = document.createElement('div');
       const commanderCircle = document.createElement('div');
       commanderCircle.classList.add('commander');
-      commanderCircle.textContent = 'PC';
+      commanderCircle.textContent = getCircleLetterPC(forceType);
       commanderDiv.appendChild(commanderCircle);
       gridWrapper.appendChild(commanderDiv);
     
@@ -330,7 +357,7 @@
       const commanderDiv2 = document.createElement('div');
       const commanderCircle2 = document.createElement('div');
       commanderCircle2.classList.add('commander2');
-      commanderCircle2.textContent = 'P2';
+      commanderCircle2.textContent = getCircleLetterP2(forceType);
       commanderDiv2.appendChild(commanderCircle2);
       gridWrapper.appendChild(commanderDiv2);
 
@@ -384,6 +411,8 @@
       const gridsWrapper = document.getElementById('gridsWrapper');
       const forceType = document.getElementById('forceType').value;
 
+      // updateLegendLabels(forceType);
+
       gridsWrapper.innerHTML = '';
       bcLeaderContainer.innerHTML = '';
 
@@ -391,7 +420,7 @@
       if (numGrids > 1 || hasFlagParty) {
         const bcCircle = document.createElement('div');
         bcCircle.classList.add('bc-leader');
-        bcCircle.textContent = 'BC';
+        bcCircle.textContent = getCircleLetterBC(forceType);
         bcLeaderContainer.appendChild(bcCircle);
       }
 
@@ -445,11 +474,11 @@
         const flagParty = generateFlagPartyGrid(forceType);
         gridsWrapper.appendChild(flagParty);
 
-        // Generate Platoon 2
-        const platoonSizeInput3 = document.getElementById(`platoonSize1`);
-        const input3 = parseInt(platoonSizeInput2.value);
+        // Generate Platoon 3
+        const platoonSizeInput3 = document.getElementById(`platoonSize2`);
+        const input3 = parseInt(platoonSizeInput3.value);
         if (isNaN(input3) || input3 < 1 || input3 > 40) {
-          alert(`Please enter a valid number between 1 and 40 for Platoon 2.`);
+          alert(`Please enter a valid number between 1 and 40 for Platoon 3.`);
           return;
         }
         const grid3 = generateGrid(input3, forceType);
@@ -476,6 +505,22 @@
         }
       }
     }
+    
+    // Update legend labels dynamically based on force type
+    function updateLegendLabels(forceType) {
+      document.getElementById('legendBCCircle').textContent = getCircleLetterBC(forceType);
+      document.getElementById('legendCommanderCircle').textContent = getCircleLetterPC(forceType);
+      document.getElementById('legend2icCircle').textContent = getCircleLetterP2(forceType);
+    }
+    
+    // Set initial legend labels
+    updateLegendLabels(document.getElementById('forceType').value);
+    
+    // Update on forceType change
+    document.getElementById('forceType').addEventListener('change', () => {
+      const forceType = document.getElementById('forceType').value;
+      updateLegendLabels(forceType);
+    });
 
   </script>
 </body>
