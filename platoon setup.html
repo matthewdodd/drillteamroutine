@@ -583,20 +583,29 @@
     }
     
     // Update legend labels dynamically based on force type
-    function updateLegendLabels(forceType) {
+    function updateLegendLabels1(forceType) {
       document.getElementById('legendBCCircle').textContent = getCircleLetterBC(forceType);
       document.getElementById('legendCommanderCircle').textContent = getCircleLetterPC(forceType);
       document.getElementById('legend2icCircle').textContent = getCircleLetterP2(forceType);
-      document.getElementById('legendBMCircle').textContent = getCircleLetterBM(forceType);
+    }
+    function updateLegendLabels2(bandType) {
+      document.getElementById('legendBMCircle').textContent = getCircleLetterBM(bandType);
     }
     
     // Set initial legend labels
-    updateLegendLabels(document.getElementById('forceType').value);
+    updateLegendLabels1(document.getElementById('forceType').value);
+    updateLegendLabels2(document.getElementById('bandType').value);
     
     // Update on forceType change
     document.getElementById('forceType').addEventListener('change', () => {
       const forceType = document.getElementById('forceType').value;
-      updateLegendLabels(forceType);
+      updateLegendLabels1(forceType);
+    });
+
+    // Update on bandType change
+    document.getElementById('bandType').addEventListener('change', () => {
+      const bandType = document.getElementById('bandType').value;
+      updateLegendLabels2(bandType);
     });
 
   </script>
