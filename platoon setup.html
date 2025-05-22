@@ -110,6 +110,21 @@
       margin-top: 10px;
     }
 
+    .bandcommander {
+      width: 30px;
+      height: 30px;
+      background-color: silver;
+      border-radius: 50%;
+      color: black;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      margin-top: 10px;
+    }
+
     .placeholder {
       width: 32px;
       height: 32px;
@@ -439,6 +454,13 @@
       wrapper.classList.add('grid-wrapper');
       wrapper.style.marginTop = '40px';
 
+      /*const bandcommanderDiv = document.createElement('div');
+      const bandcommanderCircle = document.createElement('div');
+      bandcommanderCircle.classList.add('bandcommander');
+      bandcommanderCircle.textContent = getCircleLetterBM(bandType);
+      bandcommanderDiv.appendChild(bandcommanderCircle);
+      gridWrapper.appendChild(bandcommanderDiv);
+*/
       let cols;
       if (numBand > 23) {
         cols = numBand % 2 === 0 ? 4 : 5;
