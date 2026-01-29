@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CAF Drill Simulator - Clear Routine</title>
+    <title>CAF Drill Simulator - Tempo Control</title>
     <style>
         :root {
             --air-color: #5d9cec; --army-color: #4a6741; --navy-color: #2c3e50;
-            --cmd-color: #d9534f; --anim-speed: 0.6s;
+            --cmd-color: #d9534f; --base-speed: 600ms;
         }
         body { font-family: 'Segoe UI', sans-serif; display: flex; background: #e9ecef; margin: 0; height: 100vh; overflow: hidden; }
         .is-marker .circle { border: 4px solid #ffdb58 !important; box-shadow: 0 0 15px #ffdb58 !important; }
@@ -27,7 +27,7 @@
 
         .member { 
             position: absolute; width: 40px; height: 40px; 
-            transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--anim-speed, 600ms) cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; align-items: center; justify-content: center; z-index: 10;
         }
         .circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; position: relative; }
@@ -36,17 +36,25 @@
         .army { background: var(--army-color); } .air { background: var(--air-color); } .navy { background: var(--navy-color); }
         .commander { background: var(--cmd-color); border: 2px solid #fff; }
         
-        button { cursor: pointer; padding: 8px 12px; border-radius: 4px; border: none; font-weight: bold; transition: opacity 0.2s; }
-        button:hover { opacity: 0.8; }
-        .del-btn { background: none; color: #ccc; margin-left: auto; font-size: 10px; }
+        button { cursor: pointer; padding: 8px 12px; border-radius: 4px; border: none; font-weight: bold; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        
+        .slider-container { background: #f1f3f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
+        input[type=range] { width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h3 style="margin:0;">CAF Engine v9</h3>
-    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Routine Management Active</p>
+    <h3 style="margin:0;">CAF Engine v10</h3>
+    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Tempo & Playback Control</p>
+
+    <div class="slider-container">
+        <label style="font-size: 12px; font-weight: bold; display: flex; justify-content: space-between;">
+            Playback Speed <span id="speed-val">1.0x</span>
+        </label>
+        <input type="range" id="speed-slider" min="0.2" max="3" step="0.1" value="1" oninput="updateTempo(this.value)">
+    </div>
     
     <div id="move-list"></div>
 
@@ -55,15 +63,12 @@
             <button style="background:#2e7d32; color:white;" onclick="runSequence()">START</button>
             <button style="background:#c62828; color:white;" onclick="stopSequence()">HALT</button>
         </div>
-        
         <div class="btn-group">
             <button style="background:#546e7a; color:white;" onclick="initSim()">RESET FORMATION</button>
             <button style="background:#78909c; color:white;" onclick="clearRoutine()">CLEAR ROUTINE</button>
         </div>
-
-        <div id="status-display" style="font-size:11px; font-weight:bold; margin-bottom: 2px;">State: Closed Order</div>
+        <div id="status-display" style="font-size:11px; font-weight:bold;">State: Closed Order</div>
         <div id="warn-display" style="font-size:10px; color:#c62828; height:15px; margin-bottom:10px;"></div>
-
         <div class="btn-group">
             <button onclick="saveRoutine()" style="background:#333; color:white;">SAVE</button>
             <button onclick="document.getElementById('upload-input').click()" style="background:#333; color:white;">LOAD</button>
@@ -84,7 +89,14 @@
 
 <script>
     const moves = ["None", "Quick March", "Right Turn", "Left Turn", "About Turn", "Right Wheel", "Left Wheel", "Open Order", "Close Order"];
-    let squad = [], visualFacing = 0, structuralFront = 0, isRunning = false, animMs = 600, isOpened = false;
+    let squad = [], visualFacing = 0, structuralFront = 0, isRunning = false, isOpened = false;
+    let animMs = 600; // Base speed
+
+    function updateTempo(val) {
+        document.getElementById('speed-val').innerText = val + 'x';
+        animMs = 600 / val;
+        document.documentElement.style.setProperty('--anim-speed', animMs + 'ms');
+    }
 
     function createRow(i, val = "None", p = 1) {
         const div = document.createElement('div'); div.className = 'move-item';
@@ -106,13 +118,12 @@
         s.nextElementSibling.style.display = s.value.includes('March') ? 'inline-block' : 'none';
     }
 
-    // New Clear Function
     function clearRoutine() {
         if(confirm("Clear all listed commands?")) {
             const list = document.getElementById('move-list');
             list.innerHTML = '';
             for (let i = 1; i <= 5; i++) list.appendChild(createRow(i));
-            initSim(); // Also resets the formation state
+            initSim();
         }
     }
 
@@ -201,8 +212,7 @@
                 });
             } else if (type.includes("Order")) {
                 const angleDiff = Math.abs((visualFacing - structuralFront) % 180);
-                const isInLine = angleDiff < 1 || angleDiff > 179;
-                if (!isInLine) {
+                if (angleDiff > 1 && angleDiff < 179) {
                     document.getElementById('warn-display').innerText = "Command Inhibited: Not in Line";
                     resolve(); return;
                 }
