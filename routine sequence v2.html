@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CAF Drill Simulator - Tempo Control</title>
+    <title>CAF Drill Simulator - Unified v17</title>
     <style>
         :root {
             --air-color: #5d9cec; --army-color: #4a6741; --navy-color: #2c3e50;
@@ -27,27 +27,24 @@
 
         .member { 
             position: absolute; width: 40px; height: 40px; 
-            transition: all var(--anim-speed, 600ms) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--anim-speed, 600ms) linear;
             display: flex; align-items: center; justify-content: center; z-index: 10;
         }
         .circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; position: relative; }
-        .circle::after { content: ''; position: absolute; top: -2px; width: 6px; height: 6px; background: #ffdb58; border-radius: 50%; border: 1px solid #000; }
         
         .army { background: var(--army-color); } .air { background: var(--air-color); } .navy { background: var(--navy-color); }
         .commander { background: var(--cmd-color); border: 2px solid #fff; }
         
         button { cursor: pointer; padding: 8px 12px; border-radius: 4px; border: none; font-weight: bold; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        
         .slider-container { background: #f1f3f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        input[type=range] { width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h3 style="margin:0;">CAF Engine v10</h3>
-    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Tempo & Playback Control</p>
+    <h3 style="margin:0;">CAF Engine v17</h3>
+    <p id="mode-display" style="font-size: 12px; font-weight:bold; color: #d35400; margin-bottom: 15px;">Mode: In Line</p>
 
     <div class="slider-container">
         <label style="font-size: 12px; font-weight: bold; display: flex; justify-content: space-between;">
@@ -64,12 +61,11 @@
             <button style="background:#c62828; color:white;" onclick="stopSequence()">HALT</button>
         </div>
         <div class="btn-group">
-            <button style="background:#546e7a; color:white;" onclick="initSim()">RESET FORMATION</button>
-            <button style="background:#78909c; color:white;" onclick="clearRoutine()">CLEAR ROUTINE</button>
+            <button style="background:#546e7a; color:white;" onclick="initSim()">RESET</button>
+            <button style="background:#78909c; color:white;" onclick="clearRoutine()">CLEAR</button>
         </div>
         <div id="status-display" style="font-size:11px; font-weight:bold;">State: Closed Order</div>
-        <div id="warn-display" style="font-size:10px; color:#c62828; height:15px; margin-bottom:10px;"></div>
-        <div class="btn-group">
+        <div class="btn-group" style="margin-top:10px">
             <button onclick="saveRoutine()" style="background:#333; color:white;">SAVE</button>
             <button onclick="document.getElementById('upload-input').click()" style="background:#333; color:white;">LOAD</button>
         </div>
@@ -80,7 +76,7 @@
 <div id="main">
     <div class="controls">
         <select id="element"><option value="army">Army</option><option value="air">Air Force</option><option value="navy">Navy</option></select>
-        <label>Count: <input type="number" id="count" value="11" style="width:45px"></label>
+        <label>Count: <input type="number" id="count" value="12" style="width:45px"></label>
         <label><input type="checkbox" id="showCmdr" checked> Cmdr</label>
         <button onclick="initSim()" style="background:#333; color:white;">APPLY</button>
     </div>
@@ -89,8 +85,9 @@
 
 <script>
     const moves = ["None", "Quick March", "Right Turn", "Left Turn", "About Turn", "Right Wheel", "Left Wheel", "Open Order", "Close Order"];
-    let squad = [], visualFacing = 0, structuralFront = 0, isRunning = false, isOpened = false;
-    let animMs = 600; // Base speed
+    let squad = [], isRunning = false, isOpened = false;
+    let visualFacing = 0, structuralFront = 0, animMs = 600;
+    let currentPivotGate = null;
 
     function updateTempo(val) {
         document.getElementById('speed-val').innerText = val + 'x';
@@ -100,11 +97,12 @@
 
     function createRow(i, val = "None", p = 1) {
         const div = document.createElement('div'); div.className = 'move-item';
+        const showPace = val.includes('Mar') || val.includes('Wheel');
         div.innerHTML = `<b>${i}</b>
             <select class="m-type" onchange="addNext(${i}); toggleP(this)">
                 ${moves.map(m => `<option ${m === val ? 'selected' : ''}>${m}</option>`).join('')}
             </select>
-            <input type="number" class="m-pace" value="${p}" min="1" style="width:40px; ${val.includes('Mar') ? '' : 'display:none'}">
+            <input type="number" class="m-pace" value="${p}" min="1" style="width:40px; ${showPace ? '' : 'display:none'}">
             <button class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
         return div;
     }
@@ -115,60 +113,52 @@
     }
 
     function toggleP(s) {
-        s.nextElementSibling.style.display = s.value.includes('March') ? 'inline-block' : 'none';
-    }
-
-    function clearRoutine() {
-        if(confirm("Clear all listed commands?")) {
-            const list = document.getElementById('move-list');
-            list.innerHTML = '';
-            for (let i = 1; i <= 5; i++) list.appendChild(createRow(i));
-            initSim();
-        }
+        s.nextElementSibling.style.display = (s.value.includes('March') || s.value.includes('Wheel')) ? 'inline-block' : 'none';
     }
 
     function initSim() {
-        isRunning = false; isOpened = false;
-        document.getElementById('status-display').innerText = "State: Closed Order";
-        document.getElementById('warn-display').innerText = "";
+        isRunning = false; isOpened = false; currentPivotGate = null;
         const count = parseInt(document.getElementById('count').value);
         const floor = document.getElementById('grid-floor');
         floor.innerHTML = ''; squad = []; visualFacing = 0; structuralFront = 0;
-        const rows = count >= 10 ? 3 : (count >= 6 ? 2 : 1), cols = Math.ceil(count / rows);
+        
+        const rows = 3, cols = Math.ceil(count / rows);
         
         if (document.getElementById('showCmdr').checked) {
-            squad.push(spawn(1000 + (cols * 20) - 20, 920, 'C', 'commander', -1));
+            squad.push(spawn(1000 + (cols * 20) - 20, 920, 'C', 'commander', -1, -1));
         }
         
         let id = 1;
         for (let r = 0; r < rows; r++) {
             for (let c = cols - 1; c >= 0; c--) {
-                const remainder = count % rows;
-                let hide = (rows === 3 && ((remainder === 1 && r > 0 && c === 1) || (remainder === 2 && r === 1 && c === 1))) || (rows === 2 && count % 2 !== 0 && r === 1 && c === 1);
-                if (!hide) squad.push(spawn(1000 + (c * 40), 1000 + (r * 40), id++, document.getElementById('element').value, r));
+                if(id <= count) squad.push(spawn(1000 + (c * 40), 1000 + (r * 40), id++, document.getElementById('element').value, r, c));
             }
         }
         updateVisuals();
     }
 
-    function spawn(x, y, txt, cls, rIdx) {
+    function spawn(x, y, txt, cls, rIdx, fIdx) {
         const div = document.createElement('div'); div.className = 'member';
         div.innerHTML = `<div class="circle ${cls}">${txt}</div>`;
         document.getElementById('grid-floor').appendChild(div);
-        return { el: div, x, y, rIdx };
+        return { el: div, x, y, rIdx, fIdx, localFacing: 0, turning: false, stepsDone: 0 };
     }
 
-    function getFlank(side) {
-        const drillSquad = squad.filter(m => m.rIdx !== -1);
-        const radFront = (visualFacing * Math.PI) / 180;
-        const fvx = Math.sin(radFront), fvy = -Math.cos(radFront);
-        const maxForward = Math.max(...drillSquad.map(m => m.x * fvx + m.y * fvy));
-        const currentFrontRank = drillSquad.filter(m => Math.abs((m.x * fvx + m.y * fvy) - maxForward) < 10);
-        const radFlank = ((visualFacing + 90) * Math.PI) / 180;
-        const fx = Math.sin(radFlank), fy = -Math.cos(radFlank);
-        return currentFrontRank.reduce((p, c) => {
+    function detectMode() {
+        return (Math.abs(visualFacing - structuralFront) % 180 === 0) ? "LINE" : "COLUMN";
+    }
+
+    function getPivot(isR) {
+        const mode = detectMode();
+        const drillSquad = squad.filter(s => s.rIdx !== -1);
+        let candidates = mode === "LINE" ? drillSquad.filter(s => s.rIdx === 0) : drillSquad.filter(s => s.fIdx === (isR ? Math.max(...drillSquad.map(f => f.fIdx)) : 0));
+        
+        const rad = (visualFacing * Math.PI) / 180;
+        const fx = Math.sin(rad + Math.PI/2), fy = -Math.cos(rad + Math.PI/2);
+        
+        return candidates.reduce((p, c) => {
             const pV = p.x * fx + p.y * fy, cV = c.x * fx + c.y * fy;
-            return (side === 'right' ? cV > pV : cV < pV) ? c : p;
+            return (isR ? cV > pV : cV < pV) ? c : p;
         });
     }
 
@@ -180,46 +170,74 @@
             const m = it.querySelector('.m-type').value, p = parseInt(it.querySelector('.m-pace').value);
             if (m === "None") continue;
             it.classList.add('active');
-            for (let step = 0; step < (m.includes('Mar') ? p : 1); step++) {
+            
+            if (m.includes("Wheel")) {
+                const isR = m.includes("Right");
+                const pvt = getPivot(isR);
+                currentPivotGate = { x: pvt.x, y: pvt.y, isR, targetFacing: visualFacing + (isR ? 90 : -90) };
+            }
+
+            const totalSteps = (m.includes('Mar') || m.includes('Wheel')) ? p : 1;
+            for (let step = 0; step < totalSteps; step++) {
                 if (!isRunning) break;
-                await execute(m);
+                await execute(m, totalSteps);
                 await new Promise(r => setTimeout(r, animMs));
             }
+            
             it.classList.remove('active');
+            currentPivotGate = null;
+            squad.forEach(s => { s.turning = false; s.stepsDone = 0; s.localFacing = visualFacing; });
+            document.getElementById('mode-display').innerText = "Mode: In " + (detectMode() === "LINE" ? "Line" : "Column");
         }
         isRunning = false;
         updateVisuals();
     }
 
-    function execute(type) {
+    function execute(type, totalPaces) {
         return new Promise(resolve => {
-            document.getElementById('warn-display').innerText = "";
-            let activePivot = null;
             if (type.includes("Turn")) {
                 visualFacing += (type.includes("Right") ? 90 : (type.includes("About") ? 180 : -90));
+                squad.forEach(s => s.localFacing = visualFacing);
             } else if (type === "Quick March") {
                 const r = (visualFacing * Math.PI) / 180;
                 const dx = Math.round(Math.sin(r)) * 40, dy = -Math.round(Math.cos(r)) * 40;
                 squad.forEach(s => { s.x += dx; s.y += dy; });
             } else if (type.includes("Wheel")) {
-                const isR = type.includes("Right"), angle = isR ? 90 : -90, rad = (angle * Math.PI) / 180;
-                activePivot = getFlank(isR ? 'right' : 'left');
-                visualFacing += angle; structuralFront += angle;
+                const mode = detectMode();
+                const N = mode === "LINE" ? (Math.max(...squad.map(s => s.fIdx)) + 1) : 3;
+                const wheelPaces = Math.max(4, 4 + (N - 3));
+                const stepAngle = (currentPivotGate.isR ? 90 : -90) / wheelPaces;
+                const rad = (stepAngle * Math.PI) / 180;
+
                 squad.forEach(s => {
-                    const tx = s.x - activePivot.x, ty = s.y - activePivot.y;
-                    s.x = Math.round(activePivot.x + (tx * Math.cos(rad) - ty * Math.sin(rad)));
-                    s.y = Math.round(activePivot.y + (tx * Math.sin(rad) + ty * Math.cos(rad)));
+                    const dist = Math.sqrt(Math.pow(s.x - currentPivotGate.x, 2) + Math.pow(s.y - currentPivotGate.y, 2));
+                    const isLead = (mode === "LINE" ? s.rIdx === 0 : s.fIdx === (currentPivotGate.isR ? Math.max(...squad.map(f => f.fIdx)) : 0));
+
+                    if (isLead || s.turning || dist < 10) {
+                        if (s.stepsDone < wheelPaces) {
+                            s.turning = true;
+                            const tx = s.x - currentPivotGate.x, ty = s.y - currentPivotGate.y;
+                            s.x = Math.round(currentPivotGate.x + (tx * Math.cos(rad) - ty * Math.sin(rad)));
+                            s.y = Math.round(currentPivotGate.y + (tx * Math.sin(rad) + ty * Math.cos(rad)));
+                            s.localFacing += stepAngle;
+                            s.stepsDone++;
+                        } else {
+                            const r = (currentPivotGate.targetFacing * Math.PI) / 180;
+                            s.x += Math.round(Math.sin(r)) * 40; s.y += -Math.round(Math.cos(r)) * 40;
+                            s.localFacing = currentPivotGate.targetFacing;
+                        }
+                    } else {
+                        const r = (visualFacing * Math.PI) / 180;
+                        s.x += Math.round(Math.sin(r)) * 40; s.y += -Math.round(Math.cos(r)) * 40;
+                    }
                 });
+                if (squad.every(s => s.rIdx === -1 || s.stepsDone >= wheelPaces)) visualFacing = currentPivotGate.targetFacing;
             } else if (type.includes("Order")) {
                 const angleDiff = Math.abs((visualFacing - structuralFront) % 180);
-                if (angleDiff > 1 && angleDiff < 179) {
-                    document.getElementById('warn-display').innerText = "Command Inhibited: Not in Line";
-                    resolve(); return;
-                }
+                if (angleDiff > 1 && angleDiff < 179) { resolve(); return; }
                 const isOpenCmd = type.includes("Open");
                 if (isOpenCmd !== isOpened) {
                     isOpened = isOpenCmd;
-                    document.getElementById('status-display').innerText = `State: ${isOpened ? 'Open' : 'Closed'} Order`;
                     const mult = isOpened ? 1 : -1;
                     const r = (structuralFront * Math.PI) / 180;
                     const dx = Math.round(Math.sin(r)) * 120 * mult, dy = -Math.round(Math.cos(r)) * 120 * mult;
@@ -227,22 +245,23 @@
                         if (s.rIdx === 0 || s.rIdx === -1) { s.x += dx; s.y += dy; }
                         else if (s.rIdx === 2) { s.x -= dx; s.y -= dy; }
                     });
+                    document.getElementById('status-display').innerText = "State: " + (isOpened ? "Open Order" : "Closed Order");
                 }
             }
-            updateVisuals(activePivot); resolve();
+            updateVisuals(); resolve();
         });
     }
 
-    function updateVisuals(piv = null) {
-        const rm = getFlank('right');
+    function updateVisuals() {
         squad.forEach(m => {
             m.el.style.left = m.x + 'px'; m.el.style.top = m.y + 'px';
-            m.el.style.transform = `rotate(${visualFacing}deg)`;
-            m.el.classList.toggle('is-marker', m === rm && m.rIdx !== -1);
-            m.el.classList.toggle('is-pivot', m === piv);
+            m.el.style.transform = `rotate(${m.localFacing || visualFacing}deg)`;
+            if(currentPivotGate && Math.abs(m.x - currentPivotGate.x) < 5 && Math.abs(m.y - currentPivotGate.y) < 5) m.el.classList.add('is-pivot');
+            else m.el.classList.remove('is-pivot');
         });
     }
 
+    function clearRoutine() { document.getElementById('move-list').innerHTML = ''; for (let i = 1; i <= 5; i++) document.getElementById('move-list').appendChild(createRow(i)); initSim(); }
     function stopSequence() { isRunning = false; }
     function saveRoutine() {
         const data = { s: { c: document.getElementById('count').value, e: document.getElementById('element').value, m: document.getElementById('showCmdr').checked }, r: Array.from(document.querySelectorAll('.move-item')).map(it => ({ m: it.querySelector('.m-type').value, p: it.querySelector('.m-pace').value })).filter(x => x.m !== "None") };
@@ -255,9 +274,9 @@
             initSim();
             const list = document.getElementById('move-list'); list.innerHTML = '';
             data.r.forEach((step, i) => { list.appendChild(createRow(i + 1, step.m, step.p)); addNext(i + 1); });
-            if (list.children.length === 0) list.appendChild(createRow(1));
         }; reader.readAsText(e.target.files[0]);
     }
+
     for (let i = 1; i <= 5; i++) document.getElementById('move-list').appendChild(createRow(i));
     initSim();
 </script>
