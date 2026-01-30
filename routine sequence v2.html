@@ -20,6 +20,8 @@
     
     <div id="move-list"></div>
 
+    <button onclick="addNewStepManual()" style="width:100%; padding: 8px; margin-bottom: 15px; background:#455a64; color:white; border:none; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">+ ADD MOVE</button>
+
     <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto;">
         <div class="btn-group">
             <button style="background:#2e7d32; color:white;" onclick="runSequence()">START</button>
@@ -41,7 +43,7 @@
 <div id="main">
     <div class="controls">
         <select id="element"><option value="army">Army</option><option value="air">Air Force</option><option value="navy">Navy</option></select>
-        <label>Count: <input type="number" id="count" value="12" style="width:45px"></label>
+        <label>Count: <input type="number" id="count" value="18" style="width:45px"></label>
         <label><input type="checkbox" id="showCmdr" checked> Cmdr</label>
         <button onclick="initSim()" style="background:#333; color:white;">APPLY</button>
     </div>
@@ -49,5 +51,14 @@
 </div>
 
 <script src="drill-engine.js"></script>
+<script>
+    // Integration helper for manual step addition
+    function addNewStepManual() {
+        const list = document.getElementById('move-list');
+        const currentCount = list.querySelectorAll('.move-item').length;
+        // Calls the existing createRow function from drill-engine.js
+        list.appendChild(createRow(currentCount + 1));
+    }
+</script>
 </body>
 </html>
