@@ -90,7 +90,9 @@ body {
     position: absolute; 
     width: 40px; 
     height: 40px; 
-    transition: all var(--anim-speed, 600ms) linear;
+    transition: left var(--anim-speed, 600ms) linear, 
+                top var(--anim-speed, 600ms) linear, 
+                transform var(--anim-speed, 600ms) ease-in-out;
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -153,4 +155,26 @@ button {
 
 #add-step-btn:hover {
     background-color: #2c3e50;
+}
+
+#structural-indicator {
+    position: absolute;
+    width: 4px;
+    height: 60px;
+    background: #e74c3c; /* Red line */
+    border-radius: 2px;
+    transform-origin: bottom center;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+}
+
+#structural-indicator::after {
+    content: 'FRONT';
+    position: absolute;
+    top: -20px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #e74c3c;
 }
